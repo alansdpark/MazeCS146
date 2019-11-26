@@ -139,6 +139,7 @@ public class Maze {
 		while (!stack.isEmpty() && stack.peek() != end) {
 			Vertex v = stack.pop();
 			
+			// Iterate through neighbors and keep going until cannot go any further.
 			for (int i = 0; i < v.neighbors.length; i++) {
 				Vertex neighbor = v.neighbors[i];
 				
