@@ -7,7 +7,7 @@ import java.util.Stack;
 public class Maze {
 	Vertex[][] graph; // Holds matrix for maze.
 	int size; // Size of graph, row = size, column = size.
-	Random random;
+	Random random; // To generate random integer
 	Vertex start; // Top left cell
 	Vertex end; // Bottom right cell.
 	int traversed; // Keeps track for traversals (BFS/DFS).
@@ -47,13 +47,13 @@ public class Maze {
 				else { // Not left most
 					cell.setLeftNeighbor(graph[i][j-1]);
 				}
-				if (i == (size-1)) {
+				if (i == (size-1)) { // Bottom row
 					cell.setDownNeighbor(null);
 				}
 				else {
 					cell.setDownNeighbor(graph[i+1][j]);
 				}
-				if (j == (size-1)) {
+				if (j == (size-1)) { // Right row
 					cell.setRightNeighbor(null);
 				}
 				else {
@@ -78,9 +78,11 @@ public class Maze {
 	 * Generates maze with given algorithm.
 	*/
 	public void MazeGeneration() {
+		ResetMaze();
+		MazeInit();
 		Stack<Vertex> CellStack = new Stack<>();
 		int totalCells = size * size;
-		Vertex currentCell = start;
+		Vertex currentCell = start; // Always start at top left corner.
 		currentCell.visited = true;
 		int visitedCells = 1;
 		
@@ -95,19 +97,19 @@ public class Maze {
 				}
 			}
 			
-			if (!walledNeighbors.isEmpty()) {
-				int rand = random.nextInt(walledNeighbors.size());
+			if (walledNeighbors.size() > 0) {
+				int rand = random.nextInt(walledNeighbors.size()); // from 0 to size-1
 				// knock down wall between it and current cell
-				if (currentCell.neighbors[0] == walledNeighbors.get(rand)) { // If up
+				if (currentCell.getTopNeighbor() == walledNeighbors.get(rand)) { // If currentCells top neighbor == selected walledNeighbor
 					currentCell.breakTopWall();
 					walledNeighbors.get(rand).breakDownWall();
-				} else if (currentCell.neighbors[1] == walledNeighbors.get(rand)) { // If right
+				} else if (currentCell.getRightNeighbor() == walledNeighbors.get(rand)) { // If right
 					currentCell.breakRightWall();
 					walledNeighbors.get(rand).breakLeftWall();
-				} else if (currentCell.neighbors[2] == walledNeighbors.get(rand)) { // If down
+				} else if (currentCell.getDownNeighbor() == walledNeighbors.get(rand)) { // If down
 					currentCell.breakDownWall();
 					walledNeighbors.get(rand).breakTopWall();
-				} else if (currentCell.neighbors[3] == walledNeighbors.get(rand)) { // If left.
+				} else if (currentCell.getLeftNeighbor() == walledNeighbors.get(rand)) { // If left.
 					currentCell.breakLeftWall();
 					walledNeighbors.get(rand).breakRightWall();
 				}
@@ -128,36 +130,87 @@ public class Maze {
 	}
 	
 	/*
+	 * Depth First Search to traverse maze
+	 */
+	public void DFS() {
+		Stack<Vertex> stack = new Stack<>();
+		stack.push(start);
+		
+		while (!stack.isEmpty() && stack.peek() != end) {
+			Vertex v = stack.pop();
+			
+			for (int i = 0; i < v.neighbors.length; i++) {
+				Vertex neighbor = v.neighbors[i];
+				
+			}
+		}
+	}
+	
+	/*
+	 * Breadth First Search to traverse maze
+	 */
+	public void BFS() {
+		
+	}
+	
+	/*
 	 * Prints Maze
 	 */
 	public void printMaze() {
-		System.out.println("");
+		System.out.println("MAZE " + size + "x" + size);
+		String mazeOut = "";
+
+		int rows = 2; // How many rows there are.
 		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < size; j++) {
-				if (graph[i][j].walls[0] == true) {
-					if (graph[i][j] == graph[0][0]) {
-						System.out.print("+  ");
-					}
-					else {
-						System.out.print("+---");
-					}
-				}
-				else {
-					System.out.print("+  ");
-				}
+			if (i == size - 1) { // if i is at last row
+				rows = 3; // then set to bottom layer.
 			}
-			
-			System.out.println("|");
-			for (int j = 0; j < size; j++) {
-				if (j == size - 1) {
-					System.out.print("+  ");
-				} 
-				else {
-					System.out.print("+---");
+			for (int j = 1; j <= rows; j++) {
+				// 1 = top walls, 2 = left/right, 3 = down
+				if (j == 1) {
+					mazeOut += "+"; // For top left
 				}
+				if (j == 2) {
+					mazeOut += "|"; // For left
+				}
+				if (j == 3) {
+					mazeOut += "+"; // For bottom left.
+				}
+
+				for (int k = 0; k < size; k++) { // Iterate through columns
+					Vertex v = graph[i][k];
+					
+					if (j == 1) {
+						if ((v.walls[0] != false) && (v != start) && (v != end)) { // if top walls are not broken down/ not start or end
+							mazeOut += "-";
+						}
+						else {
+							mazeOut += " ";
+						}
+						mazeOut += "+";
+					}
+					else if (j == 2) {
+						mazeOut += " ";
+						if (v.walls[1] != false) { // if right wall is not broken down
+							mazeOut += "|";
+						}
+						else {
+							mazeOut += " ";
+						}
+					}
+					else if (j == 3) { // If bottom layer
+						if ((v.walls[2] != false) && (v != start) && (v != end)) { // if down wall is not broken down/ not start or end
+							mazeOut += "-";
+						}
+						else {
+							mazeOut += " ";
+						}
+						mazeOut += "+";
+					}
+				}
+				mazeOut += "\n"; // Add a new line
 			}
-			System.out.println("+");
 		}
-		
+		System.out.println(mazeOut); // Print out to system.
 	}
 }

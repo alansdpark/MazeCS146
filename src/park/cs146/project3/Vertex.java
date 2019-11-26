@@ -6,7 +6,6 @@ public class Vertex {
 	boolean[] walls; 
 	boolean visited;  
 	Vertex parent;
-	int distance;
 	boolean inPath;
 	int traversed;
 	
@@ -14,13 +13,12 @@ public class Vertex {
 	public Vertex(int label) {
 		this.label = label;
 		visited = false;
-		neighbors = new Vertex[4];
+		neighbors = new Vertex[4]; // 0 = up, 1 = right, 2 = down, 3 = left.
 		walls = new boolean[4]; // 0 = top wall, 1 = right wall, 2 = down wall, 3 = left wall
 		for (int i = 0; i < walls.length; i++) {
 			walls[i] = true; // All walls initalized to be up.
 		}
 		parent = null;
-		distance = 0;
 		inPath = false;
 		traversed = 0;
 	}
@@ -28,7 +26,6 @@ public class Vertex {
 	public boolean hasAllWalls() {
 		for (int i = 0; i < walls.length; i++) {
 			if (walls[i] == false) {
-				
 				return false;
 			}
 		}
