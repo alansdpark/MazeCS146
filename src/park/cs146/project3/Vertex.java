@@ -1,5 +1,8 @@
 package park.cs146.project3;
 
+/*
+ * Vertex represents a singular room/cell
+ */
 public class Vertex {
 	public int label;
 	Vertex[] neighbors;
@@ -8,6 +11,8 @@ public class Vertex {
 	Vertex parent;
 	boolean inPath;
 	int traversed;
+	boolean DFSComplete; // For third "color" for DFS.
+	int distance;
 	
 	
 	public Vertex(int label) {
@@ -21,6 +26,8 @@ public class Vertex {
 		parent = null;
 		inPath = false;
 		traversed = 0;
+		DFSComplete = false;
+		distance = 0;
 	}
 	
 	public boolean hasAllWalls() {

@@ -1,6 +1,8 @@
 package park.cs146.project3;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Stack;
 
@@ -10,7 +12,7 @@ public class Maze {
 	Random random; // To generate random integer
 	Vertex start; // Top left cell
 	Vertex end; // Bottom right cell.
-	int traversed; // Keeps track for traversals (BFS/DFS).
+	boolean[] traversedValue; // Keeps track for traversals (BFS/DFS).
 	
 	public Maze(int size) {
 		this.size = size;
@@ -23,7 +25,7 @@ public class Maze {
 		}
 		start = graph[0][0];
 		end = graph[size-1][size-1];
-		traversed = 1;
+		traversedValue = new boolean[size*size];
 		MazeInit();
 	}
 	
@@ -70,8 +72,10 @@ public class Maze {
 		for (int i = 0; i < size; i++) { 
 			for (int j = 0; j < size; j++) {
 				graph[i][j].visited = false;
+				graph[i][j].inPath = false;
 			}
 		}
+		traversedValue = new boolean[size * size];
 	}
 	
 	/*
@@ -130,88 +134,269 @@ public class Maze {
 	}
 	
 	/*
+	 * Shows path created by DFS or BFS.
+	 * Starts at end room, and backtracks through Vertex parents back to the first room.
+	 */
+	public void SetPath() {
+		Vertex v = end;
+		while (v != start) {
+			v.inPath = true;
+			v = v.parent;
+		}
+		v.inPath = true;
+	}
+	
+	/*
 	 * Depth First Search to traverse maze
+	 * Uses Stack
 	 */
 	public void DFS() {
+		ResetMaze();
 		Stack<Vertex> stack = new Stack<>();
 		stack.push(start);
-		
-		while (!stack.isEmpty() && stack.peek() != end) {
+		int t = 0; // Keep track of order used in traversal.
+		while ((!stack.isEmpty()) && (stack.peek() != end)) {
 			Vertex v = stack.pop();
-			
 			// Iterate through neighbors and keep going until cannot go any further.
 			for (int i = 0; i < v.neighbors.length; i++) {
 				Vertex neighbor = v.neighbors[i];
-				
+				if ((v.walls[i] == false) && (neighbor != null) && (neighbor.visited == false)) {
+					neighbor.visited = true;
+					if (neighbor.traversed == 0) {
+						if (traversedValue[t] == false) { // If t value has not already been used.
+							neighbor.traversed = t+1;
+							traversedValue[t] = true;
+						} else {
+							t++;
+							neighbor.traversed = t + 1;
+							traversedValue[t] = true;
+						}
+					}						
+					neighbor.distance = v.distance + 1;
+					neighbor.parent = v;
+					stack.push(neighbor);
+				}
 			}
+			v.DFSComplete = true; // Mark as black.
 		}
+		SetPath();
 	}
 	
 	/*
 	 * Breadth First Search to traverse maze
+	 * Uses Queue
 	 */
 	public void BFS() {
-		
+		ResetMaze();
+		int t = 0;
+		Queue<Vertex> queue = new LinkedList<>();
+		queue.add(start);
+		while ((!queue.isEmpty()) && (!queue.peek().equals(end))) {
+			Vertex v = queue.remove();
+			
+			for (int i = 0; i < v.neighbors.length; i++) {
+				Vertex neighbor = v.neighbors[i];
+				if (v.walls[i] == false && neighbor != null && neighbor.visited == false) {
+					neighbor.visited = true;
+					if (neighbor.traversed == 0) {
+						if (traversedValue[t] == false) {
+							neighbor.traversed = t;
+							traversedValue[t] = true;
+						} else {
+							t++;
+							neighbor.traversed = t;
+							traversedValue[t] = true;
+						}
+					}
+					neighbor.distance = v.distance + 1;
+					neighbor.parent = v;
+					queue.add(neighbor);
+				}
+			}
+			v.DFSComplete = true;
+		}
+		SetPath();
 	}
 	
 	/*
 	 * Prints Maze
 	 */
-	public void printMaze() {
-		System.out.println("MAZE " + size + "x" + size);
+	public String printMaze(int type) {
 		String mazeOut = "";
-
 		int rows = 2; // How many rows there are.
-		for (int i = 0; i < size; i++) {
-			if (i == size - 1) { // if i is at last row
-				rows = 3; // then set to bottom layer.
-			}
-			for (int j = 1; j <= rows; j++) {
-				// 1 = top walls, 2 = left/right, 3 = down
-				if (j == 1) {
-					mazeOut += "+"; // For top left
+		if (type == 1) {
+			for (int i = 0; i < size; i++) { // Iterating through each row.
+				if (i == size - 1) { // if i is at last row
+					rows = 3; // then set to bottom layer.
 				}
-				if (j == 2) {
-					mazeOut += "|"; // For left
-				}
-				if (j == 3) {
-					mazeOut += "+"; // For bottom left.
-				}
-
-				for (int k = 0; k < size; k++) { // Iterate through columns
-					Vertex v = graph[i][k];
-					
+				for (int j = 1; j <= rows; j++) { // Each cell row's individual corner/wall
+					// 1 = top walls, 2 = left/right, 3 = down
 					if (j == 1) {
-						if ((v.walls[0] != false) && (v != start) && (v != end)) { // if top walls are not broken down/ not start or end
-							mazeOut += "-";
-						}
-						else {
-							mazeOut += " ";
-						}
-						mazeOut += "+";
+						mazeOut += "+"; // For top left
 					}
-					else if (j == 2) {
-						mazeOut += " ";
-						if (v.walls[1] != false) { // if right wall is not broken down
-							mazeOut += "|";
+					if (j == 2) {
+						mazeOut += "|"; // For left
+					}
+					if (j == 3) {
+						mazeOut += "+"; // For bottom left.
+					}
+
+					for (int k = 0; k < size; k++) { // Iterate through columns
+						Vertex v = graph[i][k];
+						
+						if (j == 1) {
+							if ((v.walls[0] == true) && (v != start) && (v != end)) { // if top walls are not broken down/ not start or end
+								mazeOut += "-";
+							}
+							else {
+								mazeOut += " ";
+							}
+							mazeOut += "+";
 						}
-						else {
+						else if (j == 2) {
 							mazeOut += " ";
+							if (v.walls[1] == true) { // if right wall is not broken down
+								mazeOut += "|";
+							}
+							else {
+								mazeOut += " ";
+							}
+						}
+						else if (j == 3) { // If bottom layer
+							if ((v.walls[2] == true) && (v != start) && (v != end)) { // if down wall is not broken down/ not start or end
+								mazeOut += "-";
+							}
+							else {
+								mazeOut += " ";
+							}
+							mazeOut += "+";
 						}
 					}
-					else if (j == 3) { // If bottom layer
-						if ((v.walls[2] != false) && (v != start) && (v != end)) { // if down wall is not broken down/ not start or end
-							mazeOut += "-";
-						}
-						else {
-							mazeOut += " ";
-						}
-						mazeOut += "+";
-					}
+					mazeOut += "\n"; // Add a new line
 				}
-				mazeOut += "\n"; // Add a new line
 			}
 		}
-		System.out.println(mazeOut); // Print out to system.
+		if (type == 2) {
+			for (int i = 0; i < size; i++) { // Iterating through each row.
+				if (i == size - 1) { // if i is at last row
+					rows = 3; // then set to bottom layer.
+				}
+				for (int j = 1; j <= rows; j++) { // Each cell row's individual corner/wall
+					// 1 = top walls, 2 = left/right, 3 = down
+					if (j == 1) {
+						mazeOut += "+"; // For top left
+					}
+					if (j == 2) {
+						mazeOut += "|"; // For left
+					}
+					if (j == 3) {
+						mazeOut += "+"; // For bottom left.
+					}
+
+					for (int k = 0; k < size; k++) { // Iterate through columns
+						Vertex v = graph[i][k];
+						
+						if (j == 1) {
+							if ((v.walls[0] == true) && (v != start) && (v != end)) { // if top walls are not broken down/ not start or end
+								mazeOut += "-";
+							}
+							else {
+								mazeOut += " ";
+							}
+							mazeOut += "+";
+						}
+						else if (j == 2) {
+							if (v == start) {
+								mazeOut += 0;
+							} else if (v.parent == null) {
+								mazeOut += " ";
+							} else {
+								mazeOut += ((v.traversed)%10); // Print only single digit numbers.
+							}
+
+							
+							if (v.walls[1] == true) { // if right wall is not broken down
+								mazeOut += "|";
+							}
+							else {
+								mazeOut += " ";
+							}
+						}
+						else if (j == 3) { // If bottom layer
+							if ((v.walls[2] == true) && (v != start) && (v != end)) { // if down wall is not broken down/ not start or end
+								mazeOut += "-";
+							}
+							else {
+								mazeOut += " ";
+							}
+							mazeOut += "+";
+						}
+					}
+					mazeOut += "\n"; // Add a new line
+				}
+			}
+		}
+		if (type == 3) {
+			for (int i = 0; i < size; i++) { // Iterating through each row.
+				if (i == size - 1) { // if i is at last row
+					rows = 3; // then set to bottom layer.
+				}
+				for (int j = 1; j <= rows; j++) { // Each cell row's individual corner/wall
+					// 1 = top walls, 2 = left/right, 3 = down
+					if (j == 1) {
+						mazeOut += "+"; // For top left
+					}
+					if (j == 2) {
+						mazeOut += "|"; // For left
+					}
+					if (j == 3) {
+						mazeOut += "+"; // For bottom left.
+					}
+
+					for (int k = 0; k < size; k++) { // Iterate through columns
+						Vertex v = graph[i][k];
+						
+						if (j == 1) {
+							if ((v.walls[0] == true) && (v != start) && (v != end)) { // if top walls are not broken down/ not start or end
+								mazeOut += "-";
+							} 
+							else {
+								mazeOut += " ";
+							}
+							mazeOut += "+";
+						}
+						else if (j == 2) {
+							if (v == null) {
+								mazeOut += " ";
+							}
+							else if (v.inPath) {
+								mazeOut += "#";
+							}
+							else {
+								mazeOut += " ";
+							}
+							if (v.walls[1] == true) { // if right wall is not broken down
+								mazeOut += "|";
+							}
+							else {
+								mazeOut += " ";
+							}
+						}
+						else if (j == 3) { // If bottom layer
+							if ((v.walls[2] == true) && (v != start) && (v != end)) { // if down wall is not broken down/ not start or end
+								mazeOut += "-";
+							} 
+
+							else {
+								mazeOut += " ";
+							}
+							mazeOut += "+";
+						}
+					}
+					mazeOut += "\n"; // Add a new line
+				}
+			}
+		}
+		return mazeOut; // Print out to system.
 	}
 }
