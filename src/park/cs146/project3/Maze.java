@@ -149,6 +149,7 @@ public class Maze {
 	/*
 	 * Depth First Search to traverse maze
 	 * Uses Stack
+	 * TODO: Fix Error
 	 */
 	public void DFS() {
 		ResetMaze();
@@ -185,6 +186,7 @@ public class Maze {
 	/*
 	 * Breadth First Search to traverse maze
 	 * Uses Queue
+	 * TODO: Fix Error
 	 */
 	public void BFS() {
 		ResetMaze();
