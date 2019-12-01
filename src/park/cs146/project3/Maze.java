@@ -6,6 +6,12 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Stack;
 
+/*
+ * Alan Park
+ * Alex Vuong
+ * CS 146 Project 3
+ */
+
 public class Maze {
 	Vertex[][] graph; // Holds matrix for maze.
 	int size; // Size of graph, row = size, column = size.
@@ -173,7 +179,7 @@ public class Maze {
 							traversedValue[t] = true;
 						}
 					}						
-					neighbor.distance = v.distance + 1;
+
 					neighbor.parent = v;
 					stack.push(neighbor);
 				}
@@ -195,7 +201,6 @@ public class Maze {
 		queue.add(start);
 		while ((!queue.isEmpty()) && (!queue.peek().equals(end))) {
 			Vertex v = queue.remove();
-			
 			for (int i = 0; i < v.neighbors.length; i++) {
 				Vertex neighbor = v.neighbors[i];
 				if (v.walls[i] == false && neighbor != null && neighbor.visited == false) {
@@ -210,7 +215,7 @@ public class Maze {
 							traversedValue[t] = true;
 						}
 					}
-					neighbor.distance = v.distance + 1;
+
 					neighbor.parent = v;
 					queue.add(neighbor);
 				}
@@ -225,7 +230,7 @@ public class Maze {
 	 */
 	public String printMaze(int type) {
 		String mazeOut = "";
-		int rows = 2; // How many rows there are.
+		int rows = 2; // How many rows there are. Keeps track for whether to print final portion or not.
 		if (type == 1) {
 			for (int i = 0; i < size; i++) { // Iterating through each row.
 				if (i == size - 1) { // if i is at last row

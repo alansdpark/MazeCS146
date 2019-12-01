@@ -12,7 +12,7 @@ public class Vertex {
 	boolean inPath;
 	int traversed;
 	boolean DFSComplete; // For third "color" for DFS.
-	int distance;
+	
 	
 	
 	public Vertex(int label) {
@@ -27,7 +27,7 @@ public class Vertex {
 		inPath = false;
 		traversed = 0;
 		DFSComplete = false;
-		distance = 0;
+		
 	}
 	
 	public boolean hasAllWalls() {
